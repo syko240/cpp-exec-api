@@ -12,6 +12,10 @@ const PORT = process.env.PORT || 3000;
 
 const tempDir = path.join(__dirname, 'temp_executables');
 
+const executionTimeout = 10000;
+const cpuLimit = "1.0";
+const memoryLimit = "100m";
+
 if (!fs.existsSync(tempDir)){
     fs.mkdirSync(tempDir);
 }
@@ -22,15 +26,33 @@ app.get('/', (req, res) => {
 
 app.post('/execute', (req, res) => {
   const cppCode = req.body.code;
+
+  if (!cppCode || cppCode.length === 0) {
+    return res.status(400).send('Error: Code is empty');
+  }
+
+  if (cppCode.length > 1000) {
+    return res.status(400).send('Error: Code is too long');
+  }
+
   const codeFileName = path.join(tempDir, `temp_${uuidv4()}.cpp`);
   const executableName = path.join(tempDir, `temp_${uuidv4()}`);
 
   fs.writeFileSync(codeFileName, cppCode);
 
-  const dockerCommand = `docker run --rm -v "${tempDir}":/usr/src/app cpp-exec-env /bin/bash -c "g++ /usr/src/app/${path.basename(codeFileName)} -o /usr/src/app/${path.basename(executableName)} && /usr/src/app/${path.basename(executableName)}"`;
+  const dockerCommand = `docker run --rm --cpus="${cpuLimit}" --memory="${memoryLimit}" -v "${tempDir}":/usr/src/app cpp-exec-env /bin/bash -c "g++ /usr/src/app/${path.basename(codeFileName)} -o /usr/src/app/${path.basename(executableName)} && /usr/src/app/${path.basename(executableName)}"`;
 
-  exec(dockerCommand, (error, stdout, stderr) => {
+  exec(dockerCommand, { timeout: executionTimeout }, (error, stdout, stderr) => {
     if (error) {
+      if (error.killed && error.signal === 'SIGTERM') {
+        return res.status(408).send('Error: Execution timed out');
+      }
+      if (error.code === 137) {
+        return res.status(500).send('Error: Memory limit exceeded');
+      }
+      if (error.code === 139) {
+        return res.status(500).send('Error: Segmentation fault');
+      }
       console.error(`Execution error: ${error}`);
       return res.status(500).send(`Error: ${error.message}`);
     }
