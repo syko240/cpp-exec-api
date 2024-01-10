@@ -14,10 +14,16 @@
 npm install
 ```
 
+### Build the Docker image
+
+```bash
+docker build -t cpp-exec-env .
+```
+
 ### Running the Server
 
 ```bash
-node index.js
+npm start
 ```
 
 ### API Usage
