@@ -15,7 +15,7 @@ const executeDocker = (cppCode) => {
 
         fileManagement.writeToFile(codeFileName, cppCode);
 
-        const dockerCommand = `docker run --rm --name ${containerName} --cpus="${cpuLimit}" --memory="${memoryLimit}" -v "${fileManagement.tempDir}":/usr/src/app cpp-exec-env /bin/bash -c "g++ /usr/src/app/${path.basename(codeFileName)} -o /usr/src/app/${path.basename(executableName)} && /usr/src/app/${path.basename(executableName)}"`;
+        const dockerCommand = `docker run --rm --name ${containerName} --cpus="${cpuLimit}" --memory="${memoryLimit}" --network none -v "${fileManagement.tempDir}":/usr/src/app cpp-exec-env /bin/bash -c "g++ /usr/src/app/${path.basename(codeFileName)} -o /usr/src/app/${path.basename(executableName)} && /usr/src/app/${path.basename(executableName)}"`;
 
         exec(dockerCommand, { timeout: executionTimeout }, (error, stdout, stderr) => {
         if (error) {
