@@ -3,9 +3,12 @@ const path = require('path');
 const fileManagement = require('./fileManagement');
 const { v4: uuidv4 } = require('uuid');
 
-const executionTimeout = 10000;
+const executionTimeout = 60000;
 const cpuLimit = "1.0";
 const memoryLimit = "100m";
+
+const MAX_OUTPUT_LENGTH = 2000;
+const TRUNCATION_MESSAGE = "\n[Output truncated due to length]";
 
 const executeDocker = (cppCode) => {
     return new Promise((resolve, reject) => {
@@ -15,25 +18,52 @@ const executeDocker = (cppCode) => {
 
         fileManagement.writeToFile(codeFileName, cppCode);
 
-        const dockerCommand = `docker run --rm --name ${containerName} --cpus="${cpuLimit}" --memory="${memoryLimit}" --network none -v "${fileManagement.tempDir}":/usr/src/app cpp-exec-env /bin/bash -c "g++ /usr/src/app/${path.basename(codeFileName)} -o /usr/src/app/${path.basename(executableName)} && /usr/src/app/${path.basename(executableName)}"`;
+        const dockerCommand = `docker run --rm --name ${containerName} \
+            --cpus="${cpuLimit}" \
+            --memory="${memoryLimit}" \
+            --read-only \
+            --network none \
+            -v "${fileManagement.tempDir}":/usr/src/app \
+            cpp-exec-env /bin/bash -c \
+            "g++ /usr/src/app/${path.basename(codeFileName)} \
+            -o /usr/src/app/${path.basename(executableName)} && \
+            /usr/src/app/${path.basename(executableName)}"`;
 
         exec(dockerCommand, { timeout: executionTimeout }, (error, stdout, stderr) => {
-        if (error) {
-            if (error.killed && error.signal === 'SIGTERM') {
-                exec(`docker stop ${containerName}`, (stopError, stopStdout, stopStderr) => {
-                    if (stopError) {
-                    console.error(`Failed to stop container ${containerName}: ${stopError}`);
+            fileManagement.deleteFile(codeFileName);
+            fileManagement.deleteFile(executableName);
+
+            if (error) {
+                let errorMessage = `Error: ${error.message}`;
+                if (error.killed && error.signal === 'SIGTERM') {
+                    errorMessage = 'Error: Execution timed out';
+                } else if (error.code === 137) {
+                    errorMessage = 'Error: Memory limit exceeded';
+                } else if (error.code === 139) {
+                    errorMessage = 'Error: Segmentation fault';
+                }
+                exec(`docker ps -q -f name=${containerName}`, (psError, psStdout) => {
+                    if (psStdout) {
+                        exec(`docker stop ${containerName}`, (stopError) => {
+                            if (stopError) {
+                                console.error(`Failed to stop container ${containerName}: ${stopError}`);
+                            }
+                        });
+                    }
+                    if (psError) {
+                        console.error(`Error checking for container ${containerName}: ${psError}`);
                     }
                 });
-                reject(new Error('Execution timed out'));
+                reject(new Error(errorMessage));
+            } else if (stderr) {
+                reject(new Error(`Compile/Runtime Error: ${stderr}`));
             } else {
-                reject(error);
+                let output = stdout;
+                if (stdout.length > MAX_OUTPUT_LENGTH) {
+                    output = stdout.substring(0, MAX_OUTPUT_LENGTH) + TRUNCATION_MESSAGE;
+                }
+                resolve(output);
             }
-        } else if (stderr) {
-            reject(new Error(`Compile/Runtime Error: ${stderr}`));
-        } else {
-            resolve(stdout);
-        }
         });
     });
 };

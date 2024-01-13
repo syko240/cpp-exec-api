@@ -15,7 +15,9 @@ router.post('/', (req, res) => {
 
   executeDocker(cppCode)
     .then(output => res.send(`Output:\n${output}`))
-    .catch(err => res.status(500).send(`Error: ${err.message}`));
+    .catch(err => {console.error(err.message);
+    res.status(500).send(err.message);
+  });
 });
 
 module.exports = router;
