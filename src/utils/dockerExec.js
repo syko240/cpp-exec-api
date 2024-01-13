@@ -3,9 +3,9 @@ const path = require('path');
 const fileManagement = require('./fileManagement');
 const { v4: uuidv4 } = require('uuid');
 
-const executionTimeout = 60000;
-const cpuLimit = "1.0";
-const memoryLimit = "100m";
+const EXECUTION_TIMEOUT = 60000;
+const CPU_LIMIT = "1.0";
+const MEMORY_LIMIT = "100m";
 
 const MAX_OUTPUT_LENGTH = 2000;
 const TRUNCATION_MESSAGE = "\n[Output truncated due to length]";
@@ -18,9 +18,12 @@ const executeDocker = (cppCode) => {
 
         fileManagement.writeToFile(codeFileName, cppCode);
 
+        const seccompProfilePath = path.join(__dirname, '..', '..', 'profiles', 'seccomp', 'profile.json');
         const dockerCommand = `docker run --rm --name ${containerName} \
-            --cpus="${cpuLimit}" \
-            --memory="${memoryLimit}" \
+            --security-opt apparmor=docker-default \
+            --security-opt seccomp=${seccompProfilePath} \
+            --cpus="${CPU_LIMIT}" \
+            --memory="${MEMORY_LIMIT}" \
             --read-only \
             --network none \
             -v "${fileManagement.tempDir}":/usr/src/app \
@@ -29,7 +32,7 @@ const executeDocker = (cppCode) => {
             -o /usr/src/app/${path.basename(executableName)} && \
             /usr/src/app/${path.basename(executableName)}"`;
 
-        exec(dockerCommand, { timeout: executionTimeout }, (error, stdout, stderr) => {
+        exec(dockerCommand, { timeout: EXECUTION_TIMEOUT }, (error, stdout, stderr) => {
             fileManagement.deleteFile(codeFileName);
             fileManagement.deleteFile(executableName);
 

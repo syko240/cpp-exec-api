@@ -17,7 +17,7 @@ npm install
 ### Build the Docker image
 
 ```bash
-docker build -t cpp-exec-env .
+docker build --no-cache -t cpp-exec-env .
 ```
 
 ### Running the Server
