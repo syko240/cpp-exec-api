@@ -37,7 +37,12 @@ const executeDocker = (cppCode) => {
             fileManagement.deleteFile(executableName);
 
             if (error) {
+                console.error(`Execution error: ${error.message}`);
+
                 let errorMessage = `Error: ${error.message}`;
+                if (error.cmd) {
+                    errorMessage = errorMessage.replace(error.cmd, "").trim();
+                }
                 if (error.killed && error.signal === 'SIGTERM') {
                     errorMessage = 'Error: Execution timed out';
                 } else if (error.code === 137) {
