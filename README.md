@@ -14,10 +14,16 @@
 npm install
 ```
 
-### Build the Docker image
+### Build the cpp Docker image
 
 ```bash
 docker build --no-cache -t cpp-exec-env .
+```
+
+### Build the nodejs server Docker image (optional)
+
+```bash
+docker build -t cpp-exec-app ./node_server
 ```
 
 ### Running the Server
