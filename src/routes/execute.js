@@ -13,6 +13,8 @@ router.post('/', (req, res) => {
     return res.status(400).send('Error: Code is too long');
   }
 
+  //res.send(`Received code:\n${cppCode}`);
+
   executeDocker(cppCode)
     .then(output => res.send(`Output:\n${output}`))
     .catch(err => {console.error(err.message);

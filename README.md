@@ -20,12 +20,6 @@ npm install
 docker build --no-cache -t cpp-exec-env .
 ```
 
-### Build the nodejs server Docker image (optional)
-
-```bash
-docker build -t cpp-exec-app ./node_server
-```
-
 ### Running the Server
 
 ```bash
@@ -60,12 +54,97 @@ curl -X POST http://localhost:3000/execute -H "Content-Type: application/json" -
 }
 ```
 
-## Sandbox (manual debug)
+[Manual testing](tests)
+
+## Node Docker Server
+
+#### Build the nodejs server Docker image
 
 ```bash
-chmod +x start_sandbox.sh
+docker build -t cpp-exec-app -f node_server/Dockerfile .
 ```
+
+#### Run the nodejs server Docker container
+
+```bash
+docker run -d -p 80:3000 -v /var/run/docker.sock:/var/run/docker.sock cpp-exec-app
+```
+<details>
+<summary>Windows</summary>
+
+```bash
+docker run -d -p 80:3000 -v //var/run/docker.sock:/var/run/docker.sock cpp-exec-app
+```
+
+</details>
+
+#### Usage
+
+###### Locally
+
+```bash
+curl -X POST http://localhost/execute -H "Content-Type: application/json" -d "{\"code\":\"#include <iostream>\\nint main() { std::cout << \\\"Hello World\\\" << std::endl; return 0; }\"}"
+```
+
+###### Server
+
+```bash
+curl -X POST http://ip-or-dns/execute -H "Content-Type: application/json" -d "{\"code\":\"#include <iostream>\\nint main() { std::cout << \\\"Hello World\\\" << std::endl; return 0; }\"}"
+```
+
+## Sandbox (manual debug)
 
 ```bash
 ./start_sandbox.sh
 ```
+
+## Docker utils
+<details>
+<summary>Show</summary>
+
+```bash
+docker images
+docker ps
+```
+
+##### Stop container
+```bash
+docker stop [CONTAINER_ID]
+```
+
+##### Delete container
+```bash
+docker rm [CONTAINER_ID]
+```
+
+##### Delete Image
+```bash
+docker rmi [IMAGE_ID]
+```
+
+##### Enter Container
+```bash
+docker exec -it [CONTAINER_ID] /bin/bash
+```
+Or (Windows)
+```bash
+docker exec -it [CONTAINER_ID] //bin/bash
+```
+
+##### Show and Remove Unused Docker Images
+```bash
+docker images -f "dangling=true"
+```
+```bash
+docker rmi -f $(docker images -f "dangling=true" -q)
+```
+
+##### Others
+```bash
+docker network inspect bridge
+```
+```bash
+docker scout cache prune
+```
+
+</details>
