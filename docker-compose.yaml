@@ -20,7 +20,18 @@ services:
       context: .
       dockerfile: docker/cpp_exec_env/Dockerfile
     volumes:
-      - cpp-exec-files:/usr/src/app
+      - cpp-exec-files:/usr/src/app:rw
+    read_only: true
+    security_opt:
+      - apparmor=docker-default
+      - seccomp:profiles/seccomp/profile.json
+    network_mode: "none"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 100M
 
 volumes:
   cpp-exec-files:
+    driver: local

@@ -4,9 +4,6 @@ const fileManagement = require('./fileManagement');
 const { v4: uuidv4 } = require('uuid');
 
 const EXECUTION_TIMEOUT = 60000;
-const CPU_LIMIT = "1.0";
-const MEMORY_LIMIT = "100m";
-
 const MAX_OUTPUT_LENGTH = 2000;
 const TRUNCATION_MESSAGE = "\n[Output truncated due to length]";
 
@@ -18,13 +15,7 @@ const executeDocker = (cppCode) => {
 
         fileManagement.writeToFile(codeFileName, cppCode);
 
-        const seccompProfilePath = path.join(__dirname, '..', '..', 'profiles', 'seccomp', 'profile.json');
         const dockerCommand = `docker run --rm --name ${containerName} \
-            --security-opt apparmor=docker-default \
-            --security-opt seccomp=${seccompProfilePath} \
-            --cpus="${CPU_LIMIT}" \
-            --memory="${MEMORY_LIMIT}" \
-            --network none \
             -v cpp-exec-api_cpp-exec-files:/usr/src/app \
             cpp-exec-api-cpp-exec-env /bin/bash -c \
             "g++ /usr/src/app/${path.basename(codeFileName)} \

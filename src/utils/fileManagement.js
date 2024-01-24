@@ -2,13 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-//const tempDir = path.join(__dirname, '..', '..', 'temp_executables'); // host machine volume mount
 const tempDir = '/usr/src/app/temp_executables';
-
-
-/*if (!fs.existsSync(tempDir)){
-    fs.mkdirSync(tempDir, { recursive: true });
-}*/
 
 const createTempFile = (extension) => {
     const filename = `temp_${uuidv4()}${extension}`;
@@ -18,7 +12,6 @@ const createTempFile = (extension) => {
 };
 
 const writeToFile = (filepath, data) => {
-    //fs.writeFileSync(filepath, data);
     fs.writeFileSync(filepath, data, { mode: 0o666 });
 };
 
