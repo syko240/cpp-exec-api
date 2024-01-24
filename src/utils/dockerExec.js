@@ -24,10 +24,9 @@ const executeDocker = (cppCode) => {
             --security-opt seccomp=${seccompProfilePath} \
             --cpus="${CPU_LIMIT}" \
             --memory="${MEMORY_LIMIT}" \
-            --read-only \
             --network none \
-            -v "${fileManagement.tempDir}":/usr/src/app \
-            cpp-exec-env /bin/bash -c \
+            -v cpp-exec-api_cpp-exec-files:/usr/src/app \
+            cpp-exec-api-cpp-exec-env /bin/bash -c \
             "g++ /usr/src/app/${path.basename(codeFileName)} \
             -o /usr/src/app/${path.basename(executableName)} && \
             /usr/src/app/${path.basename(executableName)}"`;

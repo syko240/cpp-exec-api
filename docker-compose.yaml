@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  cpp-exec-app:
+    container_name: cpp-exec-app
+    build:
+      context: .
+      dockerfile: docker/cpp_exec_app/Dockerfile
+    ports:
+      - "80:3000"
+    volumes:
+      - cpp-exec-files:/usr/src/app/temp_executables
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PORT=3000
+
+  cpp-exec-env:
+    container_name: cpp-exec-env
+    build:
+      context: .
+      dockerfile: docker/cpp_exec_env/Dockerfile
+    volumes:
+      - cpp-exec-files:/usr/src/app
+
+volumes:
+  cpp-exec-files:

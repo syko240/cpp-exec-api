@@ -6,6 +6,6 @@ RUN apt-get update && apt-get install -y g++ \
 
 WORKDIR /usr/src/app
 
-USER cppuser
+#USER cppuser
 
 CMD ["/bin/bash"]
