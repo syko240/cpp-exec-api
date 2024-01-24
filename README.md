@@ -5,6 +5,7 @@
 - Node.js
 - npm (Node.js package manager)
 - Docker
+- Docker Compose
 
 ## Quick Setup
 
